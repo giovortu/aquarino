@@ -1,0 +1,25 @@
+{
+	"folders": [
+		{
+			"path": "src"
+		}
+	],
+	"settings": {
+		"terminal.integrated.env.linux": {
+			"PATH": "/home/giovortu/.platformio/penv/bin:/home/giovortu/.platformio/penv:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
+			"PLATFORMIO_CALLER": "vscode"
+		},
+		"files.associations": {
+			"array": "cpp",
+			"deque": "cpp",
+			"list": "cpp",
+			"string": "cpp",
+			"unordered_map": "cpp",
+			"vector": "cpp",
+			"string_view": "cpp",
+			"initializer_list": "cpp",
+			"ranges": "cpp",
+			"utility": "cpp"
+		}
+	}
+}
