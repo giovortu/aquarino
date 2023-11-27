@@ -318,46 +318,44 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
 
 inline void mqttConnect()
 {
-  if (!mqtt.connected())
+  while (!mqtt.connected())
   {
-    while (!mqtt.connected())
+    if (mqtt.connect( m_id ))
     {
-      if (mqtt.connect( m_id ))
+      delay(150);
+      bool res = mqtt.subscribe(AMBILIGHT_TOPIC_COMMAND);
+      delay(150);
+      res &= mqtt.subscribe(MAINLIGHT_TOPIC_COMMAND);
+      delay(150);
+      String s1 = String(AMBILIGHT_TOPIC_STATUS) + "/+";
+      String s2 = String(MAINLIGHT_TOPIC_STATUS) + "/+";
+
+      res &= mqtt.subscribe(s1.c_str());
+      delay(150);
+      res &= mqtt.subscribe(s2.c_str());
+      delay(150);
+      if (res)
       {
-        delay(150);
-        bool res = mqtt.subscribe(AMBILIGHT_TOPIC_COMMAND);
-        delay(150);
-        res &= mqtt.subscribe(MAINLIGHT_TOPIC_COMMAND);
-        delay(150);
-        String s1 = String(AMBILIGHT_TOPIC_STATUS) + "/+";
-        String s2 = String(MAINLIGHT_TOPIC_STATUS) + "/+";
-
-        res &= mqtt.subscribe(s1.c_str());
-        delay(150);
-        res &= mqtt.subscribe(s2.c_str());
-        delay(150);
-        if (res)
-        {
-          char st[50];
-          sprintf(st, "Started ok, id is %s", m_id);           
-          LOG( st );
-          Serial.println( st );
-        }
-        else
-        {
-          LOG( "Started error");
-          Serial.println( "Started error" );
-        }
-        delay(150);
-        mqtt.subscribe("/aquarino/cmnd/reset");
-
-        LOG("HTTPUpdateServer ready!" );
-        Serial.println( "HTTPUpdateServer ready!" );
-
-        startMDNS();
+        char st[50];
+        sprintf(st, "Started ok, id is %s", m_id);           
+        LOG( st );
+        Serial.println( st );
       }
+      else
+      {
+        LOG( "Started error");
+        Serial.println( "Started error" );
+      }
+      delay(150);
+      mqtt.subscribe("/aquarino/cmnd/reset");
+
+      LOG("HTTPUpdateServer ready!" );
+      Serial.println( "HTTPUpdateServer ready!" );
+
+      startMDNS();
     }
   }
+  
 }
 
 void sendFloatData( String topic, String type, String unit, float value )
@@ -426,10 +424,7 @@ void ReadDHT(bool force)
 
 inline void mqttLoop( bool force = false )
 {
-  //if (force || millis() - g_mqtt_loop > 200)
-  {
-    mqtt.loop();  
-  }
+   mqtt.loop();  
 }
 
 void startMDNS()
@@ -448,24 +443,29 @@ void startMDNS()
 
 void wifiConnect( bool force = false )
 {
-  if (force || millis() - g_wifi_loop > 50000)
+  if (WiFi.status() != WL_CONNECTED)
   {
-    g_wifi_loop = millis();
-    if (WiFi.status() != WL_CONNECTED)
-    {
-      WiFi.mode(WIFI_AP_STA);
-      WiFi.begin(ssid, password);
+    //WiFi.mode(WIFI_AP_STA);
+    WiFi.begin(ssid, password);
 
-      while (WiFi.waitForConnectResult() != WL_CONNECTED)
-      {
-        WiFi.begin(ssid, password);    
-      }
-
-      wifi_set_sleep_type( NONE_SLEEP_T );
-
+    int attempts = 0;
+    while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+      delay(500);
+      Serial.print(".");
+      attempts++;
     }
-    
+
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.println("\nConnected to Wi-Fi");
+    } else {
+      Serial.println("\nFailed to connect to Wi-Fi. Please check your credentials.");
+    }
+
+
+
   }
+    
+
 }
 
 
@@ -485,7 +485,7 @@ void setup(void)
 {
   Serial.begin(115200);
   Serial.println("Starting...");
-  wifiConnect( true );
+  wifiConnect(  );
   pinMode(LUM_PIN, INPUT);
   //sht21.begin(SDA_PIN, SCL_PIN);
   httpUpdater.setup(&httpServer);
@@ -509,9 +509,9 @@ void loop(void)
   mqttConnect();
   mqttLoop();
   httpServer.handleClient();
-  ReadDHT();
+  //ReadDHT();
   ReadWaterTemperature();
-  ReadLight();
+  //ReadLight();
   sendStatus();
 #ifdef USE_MNDS
   MDNS.update();

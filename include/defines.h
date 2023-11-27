@@ -24,14 +24,15 @@
 #define LIGHT_ROWS 6
 #define LIGHT_COLUMNS (LIGHT_PIXELS/LIGHT_ROWS)
 
-#define WATER_TEMP D6
+//#define WATER_TEMP D6
+#define WATER_TEMP D1
 
 #define FLUX_PIN D7
 
 #define LUM_PIN A0
 
-#define SDA_PIN D5
-#define SCL_PIN D4
+//#define SDA_PIN D5
+//#define SCL_PIN D4
 
 #define MAX_BRIGHTNESS 255
 
