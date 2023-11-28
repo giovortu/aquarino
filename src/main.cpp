@@ -9,7 +9,7 @@ Strip *ambiLight = new Strip( AMBILIGHT_PIN, AMBILIGHT_ROWS, AMBILIGHT_COLUMNS ,
 
 Strip *strips[ eNumStrips ] = { ambiLight, mainLight };
 
-const char *m_id = "aqclient_001";
+String m_id = "aqclient_001";
 
 
 ESP8266WebServer httpServer(80);
@@ -77,6 +77,16 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
       return;
     }
 
+    //Avoid self-send
+    if ( doc.containsKey("clientid") )
+    {
+      String id = doc["clientid"].as<String>();
+      if ( id == m_id )
+      {
+        return;
+      }
+    }
+
     Strip *strip = topicToStrip( strTopic );
     
     if ( nullptr == strip )
@@ -85,35 +95,23 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
       return;
     }
 
-    bool fromStatus = false;
     //first time we receive a message from the we unsubscribe from the status topic
     if ( strTopic.indexOf( AMBILIGHT_TOPIC_STATUS ) != -1 || 
          strTopic.indexOf( MAINLIGHT_TOPIC_STATUS ) != -1 )
     {
 
-      fromStatus = true;
-
-      String s1 = String(AMBILIGHT_TOPIC_STATUS) + "/+";
-      mqtt.unsubscribe(s1.c_str());
-      s1 = String(MAINLIGHT_TOPIC_STATUS) + "/+";
-      mqtt.unsubscribe(s1.c_str());
-      LOG( "Unsubscribing from mainlight status");
-      LOG( "Unsubscribing from ambilight status");
-      
       if (doc.containsKey("value"))
       {
         if ( strTopic.indexOf("status") != -1 )
         {
           String status = doc["value"].as<String>();
           strip->setIsOn( status == "on" );
-          LOG("IS on from status");
         }
 
         if ( strTopic.indexOf("color") != -1 )
         {
           String color = doc["value"].as<String>();
           strip->setAllLightPixel( color );
-          LOG("Color from status");
         }
 
         if ( strTopic.indexOf("temperature") != -1 )
@@ -122,7 +120,6 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
           if ( temp >= TEMP_1000K  && temp <= TEMP_10000K )
           {
             strip->setAllLightPixelInt( temperatures_rgb[temp]  );
-            LOG("Temperature from status");
           }
         }
 
@@ -132,16 +129,14 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
           int bright = MAX_BRIGHTNESS * (float)val / 100.0;
 
           strip->setBrightness(  bright );
-          LOG("brightness from status");
         }
       }
 
     }
 
 
-    if ( ( strTopic.indexOf( AMBILIGHT_TOPIC_COMMAND ) != -1 || 
-         strTopic.indexOf( MAINLIGHT_TOPIC_COMMAND ) != -1)  &&
-         !fromStatus )
+  if ( ( strTopic.indexOf( AMBILIGHT_TOPIC_COMMAND ) != -1 || 
+         strTopic.indexOf( MAINLIGHT_TOPIC_COMMAND ) != -1) )
   {
       if (doc.containsKey("status"))
       {      
@@ -161,9 +156,7 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
           messageString="{\"value\":\"" + color + "\"}";   
 
           String st = strip->topic + "/status/color";
-          sendWithDelay( st.c_str(), messageString.c_str() );
-
-          
+          sendWithDelay( st.c_str(), messageString.c_str() );          
       }
 
       if ( doc.containsKey("temperature") )
@@ -320,7 +313,7 @@ inline void mqttConnect()
 {
   while (!mqtt.connected())
   {
-    if (mqtt.connect( m_id ))
+    if (mqtt.connect( m_id.c_str() ))
     {
       delay(150);
       bool res = mqtt.subscribe(AMBILIGHT_TOPIC_COMMAND);
@@ -337,7 +330,7 @@ inline void mqttConnect()
       if (res)
       {
         char st[50];
-        sprintf(st, "Started ok, id is %s", m_id);           
+        sprintf(st, "Started ok, id is %s", m_id.c_str() );           
         LOG( st );
         Serial.println( st );
       }
@@ -362,13 +355,13 @@ void sendFloatData( String topic, String type, String unit, float value )
 {
     float val = isnan(value)?0:value;
 
-    String json = "{ \"timestamp\":\"" + getTime() +  "\",\"unit\":\"" + unit + "\",\"type\":\"" + type + "\",\"value\":" + val + "}" ;
+    String json = "{ \"timestamp\":\"" + getTime() +  "\",\"unit\":\"" + unit + "\",\"type\":\"" + type + "\",\"value\":" + val + ",\"clientid\":\"" + m_id +  "}" ;
     mqtt.publish(topic.c_str(), json.c_str());
 }
 
 void sendJsonData( String topic, String _json )
 {
-    String json = "{ \"timestamp\":\"" + getTime() +  "\"," + _json + "}" ;
+    String json = "{ \"timestamp\":\"" + getTime() +  "\"," + _json + ",\"clientid\":\"" + m_id +  "}" ;
     mqtt.publish(topic.c_str(), json.c_str());
 }
 
@@ -377,7 +370,7 @@ void sendStatus(bool force)
   if (force || millis() - g_status_loop > SEND_STATUS_INTERVAL)
   {
     g_status_loop = millis();
-    String json = "{\"timestamp\":\"" + getTime() + "\",\"address\":\"" + WiFi.localIP().toString() + "\",\"id\":\"" + m_id + "\"}" ;
+    String json = "{\"timestamp\":\"" + getTime() + "\",\"address\":\"" + WiFi.localIP().toString() + "\",\"clientid\":\"" + m_id + "\"}" ;
     String topic = String( STATUS_TOPIC ) + m_id;
 
     mqtt.publish(topic.c_str(), json.c_str());
@@ -455,16 +448,17 @@ void wifiConnect( bool force = false )
       attempts++;
     }
 
-    if (WiFi.status() == WL_CONNECTED) {
+    if (WiFi.status() == WL_CONNECTED)
+    {
       Serial.println("\nConnected to Wi-Fi");
-    } else {
+      m_id = WiFi.macAddress();
+      m_id.replace( ":", "" );
+    }
+    else
+    {
       Serial.println("\nFailed to connect to Wi-Fi. Please check your credentials.");
     }
-
-
-
-  }
-    
+  }   
 
 }
 
