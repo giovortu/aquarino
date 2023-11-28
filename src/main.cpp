@@ -56,9 +56,10 @@ void LOG( String message )
 void LOG( String message ){}
 #endif
 
-void sendWithDelay( const char *strTopic, const char *messageString, int p_delay  = DELAY_MQTT_PUBLISH )
+void sendWithDelay( const char *strTopic, String messageString, int p_delay  )
 {
-    mqtt.publish( strTopic, messageString, true );
+    messageString = "{" + messageString + ",\"clientid\":\"" + m_id + "\"}";
+    mqtt.publish( strTopic, messageString.c_str() , true );
     delay(p_delay);
 }
 
@@ -142,9 +143,9 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
       {      
         String status = doc["status"].as<String>();
         strip->setIsOn(status == "on" );
-        messageString="{\"value\":\""+ status + "\"}";
+        messageString="\"value\":\""+ status + "\"";
         String st = strip->topic + "/status/status";
-        sendWithDelay( st.c_str(), messageString.c_str() );
+        sendWithDelay( st.c_str(), messageString );
         
       }
 
@@ -153,10 +154,10 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
           String color = doc["color"].as<String>();
           strip->setAllLightPixel( color );
 
-          messageString="{\"value\":\"" + color + "\"}";   
+          messageString="\"value\":\"" + color + "\"";   
 
           String st = strip->topic + "/status/color";
-          sendWithDelay( st.c_str(), messageString.c_str() );          
+          sendWithDelay( st.c_str(), messageString );          
       }
 
       if ( doc.containsKey("temperature") )
@@ -166,9 +167,9 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
         {
 
           strip->setAllLightPixelInt( temperatures_rgb[temp]  );
-          messageString="{\"value\":"+  String( temp  )  + "}";
+          messageString="\"value\":"+  String( temp  ) ;
           String st = strip->topic + "/status/temperature";
-          sendWithDelay( st.c_str(), messageString.c_str() );
+          sendWithDelay( st.c_str(), messageString );
         }
       } 
 
@@ -179,9 +180,9 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
         {
           int bright = MAX_BRIGHTNESS * (float)val / 100.0;
           strip->setBrightness( bright );     
-          messageString="{\"value\":"+ String( val ) + "}";          
+          messageString="\"value\":"+ String( val ) ;          
           String st = strip->topic + "/status/brightness";
-          sendWithDelay( st.c_str(), messageString.c_str());
+          sendWithDelay( st.c_str(), messageString);
         }
       }
 
@@ -195,10 +196,10 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
             String color = obj["color"].as<String>();
             strip->setLightPixel( color, ledIndex );     
 
-            messageString="{\"value\":"+ String( ledIndex ) + ",\"color\":\"" + color + "\"}";   
+            messageString="\"value\":"+ String( ledIndex ) + ",\"color\":\"" + color + "\"";   
             
             String st = strip->topic + "/status/index";
-            sendWithDelay( st.c_str(), messageString.c_str() );
+            sendWithDelay( st.c_str(), messageString );
         }
       }
       else
@@ -214,10 +215,10 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
             String color = obj["color"].as<String>();
             strip->setRawPixelCoords( color, row, col );      
 
-            messageString="{\"value\": {\"row\":"+ String( row ) + ",\"col\":"+ String( col ) + ",\"color\":\"" + color + "\"}}";   
+            messageString="\"value\": {\"row\":"+ String( row ) + ",\"col\":"+ String( col ) + ",\"color\":\"" + color + "\"}";   
             
           String st = strip->topic + "/status/pixel";
-          sendWithDelay( st.c_str(), messageString.c_str() );
+          sendWithDelay( st.c_str(), messageString );
         }
       }      
       else
@@ -237,10 +238,10 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
         if ( rand )
         {
           strip->randomLights(  );
-          messageString="{\"value\":true}";   
+          messageString="\"value\":true";   
           
           String st = strip->topic + "/status/random";
-          sendWithDelay( st.c_str(), messageString.c_str() );
+          sendWithDelay( st.c_str(), messageString );
         }        
       }
       else
@@ -251,9 +252,9 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
         if ( abin )
         {
           strip->abinsulaLights(  );
-          messageString="{\"value\":true}";           
+          messageString="\"value\":true";           
           String st = strip->topic + "/status/abinsula";
-          sendWithDelay( st.c_str(), messageString.c_str() );
+          sendWithDelay( st.c_str(), messageString );
         }
 
       }
@@ -265,10 +266,10 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
         if ( rainb )
         {
           strip->rainbowLights( );
-          messageString="{\"value\":true}";
+          messageString="\"value\":true";
           
           String st = strip->topic + "/status/rainbow";
-          sendWithDelay( st.c_str(), messageString.c_str() );
+          sendWithDelay( st.c_str(), messageString );
         }  
       }
       else
@@ -276,10 +277,10 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
       {
         String txt = doc["text"].as<String>();
         strip->displayText(  txt);
-        messageString="{\"value\":\""+ txt + "\"}";
+        messageString="\"value\":\""+ txt + "\"";
         
         String st = strip->topic + "/status/text";
-        sendWithDelay( st.c_str(), messageString.c_str() );
+        sendWithDelay( st.c_str(), messageString );
         
       }
       else
@@ -290,10 +291,10 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
         if ( def )
         {
           strip->setDefaultColor( );
-          messageString="{\"value\":true}";
+          messageString="\"value\":true";
           
         String st = strip->topic + "/status/default";
-        sendWithDelay( st.c_str(), messageString.c_str() );
+        sendWithDelay( st.c_str(), messageString );
         }  
       }
       else      

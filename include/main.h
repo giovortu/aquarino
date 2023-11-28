@@ -28,7 +28,7 @@ void startMDNS();
 void LOG( String message );
 
 void mqttCallback(const char *topic, byte *message, unsigned int length);
-
+void sendWithDelay( const char *strTopic, String messageString, int p_delay  = DELAY_MQTT_PUBLISH );
 void sendFloatData( String topic, String type, String unit, float value );
 void sendJsonData( String topic, String _json );
 void sendStatus(bool force = false);
