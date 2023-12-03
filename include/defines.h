@@ -6,9 +6,9 @@
 
 #define USE_MNDS 1
 #define VERBOSE 1
-//#define LOG_TO_SERIAL 1
+#define LOG_TO_SERIAL 1
 
-#define UFFICIO 1
+//#define UFFICIO 1
 
 #define DELAY_MQTT_PUBLISH 100
 
@@ -185,15 +185,7 @@ inline const char *NTP_1 = "ntp1.inrim.it";
 inline const char *NTP_2 = "pool.ntp.org";
 inline const char *NTP_3 = "time.nist.gov";
 
-#ifdef UFFICIO
-inline const char *BROKER ="aquarino-mosquitto.local";
-inline const char *ssid = "Aquarino_AP";
-inline const char *password = "uff1c10v14l3umb3rt028";
-#else
-inline const char *BROKER ="192.168.0.227";
-inline const char *ssid = "ddwrt";
-inline const char *password = "";
-#endif
+#include "secrets.h"
 
 
 #ifdef USE_MNDS
