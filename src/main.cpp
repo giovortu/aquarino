@@ -440,11 +440,13 @@ void startMDNS()
 void receiveESPNOWCallBackFunction(uint8_t *senderMac, uint8_t *incomingData, uint8_t len) 
 {
 #ifdef VERBOSE  
+    Serial.print("Data received from sensor: ");
     Serial.println( (char*) incomingData );
 #endif   
     uint8_t msg[] = "OK";
     uint8_t msg_len = sizeof(msg);
     esp_now_send(senderMac, msg, msg_len);
+    delayMicroseconds( 50000 );
     parseAndSend( (char*) incomingData , msg_len );
 }
 
