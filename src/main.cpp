@@ -76,7 +76,6 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
   Serial.print(". Message: ");
   Serial.println(messageString);
 
-  LOG(messageString);
 
     DynamicJsonDocument doc(2048);
     DeserializationError error = deserializeJson(doc, messageString);
@@ -104,6 +103,8 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
       return;
     }
 
+   
+
     //first time we receive a message from the we unsubscribe from the status topic
     if ( strTopic.indexOf( AMBILIGHT_TOPIC_STATUS ) != -1 || 
          strTopic.indexOf( MAINLIGHT_TOPIC_STATUS ) != -1 )
@@ -115,6 +116,7 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
         {
           String status = doc["value"].as<String>();
           strip->setIsOn( status == "on" );
+          LOG("SET STATUS");
         }
 
         if ( strTopic.indexOf("color") != -1 )
@@ -147,6 +149,7 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
   if ( ( strTopic.indexOf( AMBILIGHT_TOPIC_COMMAND ) != -1 || 
          strTopic.indexOf( MAINLIGHT_TOPIC_COMMAND ) != -1) )
   {
+
       if (doc.containsKey("status"))
       {      
         String status = doc["status"].as<String>();
@@ -308,11 +311,8 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
       else      
       {
           strip->restoreColor(  );
-      }  
-
+      } 
   }
-   
-
 }  
 
 
@@ -351,8 +351,8 @@ inline void mqttConnect()
       delay(150);
       mqtt.subscribe("/aquarino/cmnd/reset");
 
-      LOG("HTTPUpdateServer ready!" );
-      Serial.println( "HTTPUpdateServer ready!" );
+      LOG("MQTT connection ready!" );
+      Serial.println( "MQTT connection ready!" );
 
       startMDNS();
     }
@@ -443,7 +443,7 @@ void startMDNS()
 #endif
 }
 
-
+#ifdef USE_ESPNOW
 
 void receiveESPNOWCallBackFunction(uint8_t *senderMac, uint8_t *incomingData, uint8_t len) 
 {
@@ -551,6 +551,8 @@ void setupESPNow()
 #endif
 }
 
+#endif
+
 void wifiConnect( bool force = false )
 {
   if (WiFi.status() != WL_CONNECTED)
@@ -570,9 +572,9 @@ void wifiConnect( bool force = false )
       Serial.println("\nConnected to Wi-Fi");
       m_id = WiFi.macAddress();
       m_id.replace( ":", "" );
-
+#ifdef USE_ESPNOW
       setupESPNow();
-
+#endif
       
     }
     else

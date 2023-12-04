@@ -5,8 +5,9 @@
 #include <Adafruit_NeoPixel.h>
 
 #define USE_MNDS 1
-#define VERBOSE 1
-#define LOG_TO_SERIAL 1
+//#define VERBOSE 1
+//#define LOG_TO_SERIAL 1
+#define USE_ESPNOW 1
 
 #define RETRY_INTERVAL 10000
 
