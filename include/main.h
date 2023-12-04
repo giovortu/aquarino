@@ -17,7 +17,7 @@
 #include <DallasTemperature.h>
 #include <ArduinoJson.h>
 #include <time.h>
-
+#include <espnow.h>
 
 
 #ifdef USE_MNDS
@@ -35,9 +35,10 @@ void sendStatus(bool force = false);
 void ReadWaterTemperature(bool force = false);
 void ReadLight(bool force = false);
 void ReadDHT(bool force = false);
-
+void setupESPNow();
 void setTime();
-
+void receiveESPNOWCallBackFunction(uint8_t *senderMac, uint8_t *incomingData, uint8_t len);
+void parseAndSend( char *data, uint8_t len );
 
 inline BaseEffect *effect = nullptr;
 

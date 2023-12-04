@@ -8,7 +8,9 @@
 #define VERBOSE 1
 #define LOG_TO_SERIAL 1
 
-//#define UFFICIO 1
+#define RETRY_INTERVAL 10000
+
+#define UFFICIO 1
 
 #define DELAY_MQTT_PUBLISH 100
 
@@ -177,6 +179,8 @@ inline const char *TEMPERATURE_TOPIC       = SENSORS_TOPIC "/temperature";
 inline const char *WATERTEMP_TOPIC         = SENSORS_TOPIC "/watertemperature";
 inline const char *HUMIDITY_TOPIC          = SENSORS_TOPIC "/humidity";
 inline const char *LUMINOSITY_TOPIC        = SENSORS_TOPIC "/luminosity";
+
+
 
 inline const char *STATUS_TOPIC = "/aquarino/status/";
 inline const char *LOG_TOPIC    = "/aquarino/log";
