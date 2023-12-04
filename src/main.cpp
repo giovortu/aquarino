@@ -67,8 +67,16 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
 {
     String messageString = (char*)message;
 
+    messageString = messageString.substring(0, length);
+
     String strTopic = topic;
 
+  Serial.print("Message arrived on topic: ");
+  Serial.print(topic);
+  Serial.print(". Message: ");
+  Serial.println(messageString);
+
+  LOG(messageString);
 
     DynamicJsonDocument doc(2048);
     DeserializationError error = deserializeJson(doc, messageString);

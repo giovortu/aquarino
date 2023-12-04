@@ -54,5 +54,6 @@
         "streambuf": "cpp",
         "cinttypes": "cpp",
         "typeinfo": "cpp"
-    }
+    },
+    "C_Cpp.default.compilerPath": "C:/Users/giovortu/.platformio/packages/toolchain-xtensa/bin/xtensa-lx106-elf-gcc.exe"
 }
