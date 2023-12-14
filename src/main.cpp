@@ -364,13 +364,13 @@ void sendFloatData( String topic, String type, String unit, float value )
 {
     float val = isnan(value)?0:value;
 
-    String json = "{ \"timestamp\":\"" + getTime() +  "\",\"unit\":\"" + unit + "\",\"type\":\"" + type + "\",\"value\":" + val + ",\"clientid\":\"" + m_id +  "}" ;
+    String json = "{ \"timestamp\":\"" + getTime() +  "\",\"unit\":\"" + unit + "\",\"type\":\"" + type + "\",\"value\":" + val + ",\"clientid\":\"" + m_id +  "\"}" ;
     mqtt.publish(topic.c_str(), json.c_str());
 }
 
 void sendJsonData( String topic, String _json )
 {
-    String json = "{ \"timestamp\":\"" + getTime() +  "\"," + _json + ",\"clientid\":\"" + m_id +  "}" ;
+    String json = "{ \"timestamp\":\"" + getTime() +  "\"," + _json + ",\"clientid\":\"" + m_id +  "\"}" ;
     mqtt.publish(topic.c_str(), json.c_str());
 }
 
