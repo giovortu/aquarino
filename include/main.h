@@ -39,7 +39,7 @@ void ReadDHT(bool force = false);
 void setTime();
 
 
-inline BaseEffect *effect = nullptr;
+ BaseEffect *effect = nullptr;
 
 
 #endif
