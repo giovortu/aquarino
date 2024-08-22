@@ -17,8 +17,9 @@
 #include <DallasTemperature.h>
 #include <ArduinoJson.h>
 #include <time.h>
-
-
+#ifdef USE_ESPNOW
+#include <espnow.h>
+#endif
 
 #ifdef USE_MNDS
 #include <ESP8266mDNS.h>
@@ -37,7 +38,11 @@ void ReadLight(bool force = false);
 void ReadDHT(bool force = false);
 
 void setTime();
-
+#ifdef USE_ESPNOW
+void receiveESPNOWCallBackFunction(uint8_t *senderMac, uint8_t *incomingData, uint8_t len);
+void parseAndSend( char *data, uint8_t len );
+void setupESPNow();
+#endif
 
  BaseEffect *effect = nullptr;
 

@@ -310,14 +310,12 @@ void mqttCallback(const char *topic, byte *message, unsigned int length)
 
 
 
-void mqttConnect()
+inline void mqttConnect()
 {
-  
   while (!mqtt.connected())
   {
     if (mqtt.connect( m_id.c_str() ))
     {
-      Serial.println( "\nConnected!" );
       delay(150);
       bool res = mqtt.subscribe(AMBILIGHT_TOPIC_COMMAND);
       delay(150);
@@ -348,8 +346,8 @@ void mqttConnect()
       LOG("HTTPUpdateServer ready!" );
       Serial.println( "HTTPUpdateServer ready!" );
 
+      startMDNS();
     }
-
   }
   
 }
@@ -426,8 +424,9 @@ inline void mqttLoop( bool force = false )
 void startMDNS()
 {
 #ifdef USE_MNDS
-  while( !MDNS.begin( HOST ) )
+  while( !MDNS.begin( "aquarino") )
   {
+    Serial.println( "MDNS starting...");
     delay(1000);  
   }
   Serial.println( "MDNS started!");
@@ -436,7 +435,7 @@ void startMDNS()
 #endif
 }
 
-bool wifiConnect( bool force = false )
+void wifiConnect( bool force = false )
 {
   if (WiFi.status() != WL_CONNECTED)
   {
@@ -453,19 +452,14 @@ bool wifiConnect( bool force = false )
     if (WiFi.status() == WL_CONNECTED)
     {
       Serial.println("\nConnected to Wi-Fi");
-      Serial.println( WiFi.localIP() );
       m_id = WiFi.macAddress();
       m_id.replace( ":", "" );
-      return true;
     }
     else
     {
       Serial.println("\nFailed to connect to Wi-Fi. Please check your credentials.");
-      return false;
     }
-  }  
-
-  return true; 
+  }   
 
 }
 
@@ -486,18 +480,14 @@ void setup(void)
 {
   Serial.begin(115200);
   Serial.println("Starting...");
-  if ( wifiConnect( ) )
-  {
-    //sht21.begin(SDA_PIN, SCL_PIN);
-    httpUpdater.setup(&httpServer);
-    httpServer.begin();
-    sensors.begin();
-    setTime();  
-    startMDNS();
-  }
-
+  wifiConnect(  );
   pinMode(LUM_PIN, INPUT);
+  //sht21.begin(SDA_PIN, SCL_PIN);
+  httpUpdater.setup(&httpServer);
+  httpServer.begin();
+  sensors.begin();
 
+  setTime();  
 
   g_dht_read = millis();
   g_water_read = millis();
@@ -505,29 +495,21 @@ void setup(void)
   g_wifi_loop = millis();
   g_status_loop = millis();
 
-  Serial.println("Setup finished!");
-
 }
 
 
 void loop(void)
 {
-  if ( wifiConnect() )
-  {
-    mqttConnect();
-    mqttLoop();
-    httpServer.handleClient();
-    //ReadDHT();
-    ReadWaterTemperature();
-    //ReadLight();
-    sendStatus();
-  #ifdef USE_MNDS
-    MDNS.update();
-  #endif
-  }
-  else
-  {
-
-  }
+  wifiConnect();
+  mqttConnect();
+  mqttLoop();
+  httpServer.handleClient();
+  //ReadDHT();
+  ReadWaterTemperature();
+  //ReadLight();
+  sendStatus();
+#ifdef USE_MNDS
+  MDNS.update();
+#endif
  
 }
