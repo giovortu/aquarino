@@ -436,6 +436,119 @@ void startMDNS()
 #endif
 }
 
+
+#ifdef USE_ESPNOW
+
+void receiveESPNOWCallBackFunction(uint8_t *senderMac, uint8_t *incomingData, uint8_t len) 
+{
+#ifdef VERBOSE  
+    Serial.print("Data received from sensor: ");
+    Serial.println( (char*) incomingData );
+#endif   
+    uint8_t msg[] = "OK";
+    uint8_t msg_len = sizeof(msg);
+    esp_now_send(senderMac, msg, msg_len);
+    delayMicroseconds( 50000 );
+    parseAndSend( (char*) incomingData , msg_len );
+}
+
+void parseAndSend( char *data, uint8_t len )
+{
+  DynamicJsonDocument doc(2048);
+  DeserializationError error = deserializeJson(doc, data);
+  if (error)
+  {
+    LOG( "Deserialization error" );//error.c_str());
+    return;
+  }
+
+  if ( doc.containsKey("type") && doc["type"].as<String>() == "agri" &&  doc.containsKey("id") )
+  {
+    String id =  doc["id"].as<String>();
+    String msg ="";
+    String header = "{\"timestamp\":\""+ getTime() + "\"";
+
+    String topic = String( SENSORS_TOPIC ) + "/" + id;
+    String send_topic = "";
+    String command = "";
+
+    float temp = doc["temp"].as<float>();
+    float soil = doc["soil"].as<float>();
+    float lum  = doc["lum"].as<float>();
+    float battlev = doc["bl"].as<float>();
+    float hum = doc["hum"].as<float>();
+
+    send_topic = topic + "/luminosity";
+    command = header + ",\"value\":" + lum + ",\"type\":\"luminosity\"}";
+    mqtt.publish(send_topic.c_str(), command.c_str());
+
+#ifdef VERBOSE
+    Serial.println( send_topic + " " + command);
+#endif
+
+    send_topic = topic + "/temperature";
+    command = header + ",\"value\":" + temp + ",\"type\":\"temperature\"}";
+    mqtt.publish(send_topic.c_str(), command.c_str());
+
+#ifdef VERBOSE
+    Serial.println( send_topic + " " + command);
+#endif
+
+    send_topic = topic + "/soil_moisture";
+    command = header + ",\"value\":" + soil + ",\"type\":\"soil_moisture\"}";
+    mqtt.publish(send_topic.c_str(), command.c_str());
+
+#ifdef VERBOSE
+    Serial.println( send_topic + " " + command);
+#endif
+
+    send_topic = topic + "/battery_level";
+    command = header + ",\"value\":" + battlev + ",\"type\":\"battery_level\"}";
+    mqtt.publish(send_topic.c_str(), command.c_str());
+
+#ifdef VERBOSE
+    Serial.println( send_topic + " " + command);
+#endif
+
+    send_topic = topic + "/humidity";
+    command = header + ",\"value\":" + hum + ",\"type\":\"humidity\"}";
+    mqtt.publish(send_topic.c_str(), command.c_str());
+
+#ifdef VERBOSE
+    Serial.println( send_topic + " " + command);
+#endif
+
+
+  }
+
+}
+
+void setupESPNow()
+{
+#ifdef VERBOSE
+  Serial.println("ESP-Now Receiver");
+  Serial.printf("Transmitter mac: %s\n", WiFi.macAddress().c_str());
+#endif
+
+  if (esp_now_init() != 0) 
+  {
+#ifdef VERBOSE   
+    Serial.println("ESP_Now init failed...");
+#endif    
+    delay(RETRY_INTERVAL);
+    setupESPNow();
+  }
+  esp_now_set_self_role(ESP_NOW_ROLE_SLAVE);
+  esp_now_register_recv_cb(receiveESPNOWCallBackFunction);
+#ifdef VERBOSE
+  Serial.println("MASTER ready. Waiting for messages...");
+#endif
+}
+
+#endif
+
+
+
 bool wifiConnect( bool force = false )
 {
   if (WiFi.status() != WL_CONNECTED)
@@ -494,6 +607,10 @@ void setup(void)
     sensors.begin();
     setTime();  
     startMDNS();
+#ifdef USE_ESPNOW
+    setupESPNow();
+#endif
+
   }
 
   pinMode(LUM_PIN, INPUT);

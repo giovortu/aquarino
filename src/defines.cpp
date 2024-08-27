@@ -1,6 +1,6 @@
 #include "defines.h"
 
-
+#include "secrets.h"
 
 
  unsigned long int g_dht_read = 0;
@@ -101,15 +101,6 @@
  const char *NTP_2 = "pool.ntp.org";
  const char *NTP_3 = "time.nist.gov";
 
-#ifdef UFFICIO
- const char *BROKER ="10.0.160.252";
- const char *ssid = "";
- const char *password = "uff1c10v14l3umb3rt028";
-#else
- const char *BROKER ="192.168.0.227";
- const char *ssid = "ddwrt";
- const char *password = "";
-#endif
 
 
 #ifdef USE_MNDS
